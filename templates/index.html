@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BigQuery Release Notes Hub &amp; Share</title>
+    <meta name="description" content="A modern, real-time dashboard for exploring and sharing Google BigQuery release notes. Filter, search, and tweet updates instantly.">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Custom Style Sheet -->
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation & Filters -->
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="logo-icon">
+                    <i data-lucide="database" class="icon-brand"></i>
+                    <div class="logo-accent"></div>
+                </div>
+                <div class="brand-text">
+                    <h1>BigQuery</h1>
+                    <span>Release Notes Hub</span>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <h2>Search Feed</h2>
+                <div class="search-box">
+                    <i data-lucide="search" class="search-icon"></i>
+                    <input type="text" id="search-input" placeholder="Search keywords..." aria-label="Search release notes">
+                    <button id="clear-search-btn" class="clear-btn" style="display: none;" title="Clear search">
+                        <i data-lucide="x" class="small-icon"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <h2>Categories</h2>
+                <div class="category-filters" role="group" aria-label="Category Filters">
+                    <button class="filter-btn active" data-category="All" id="filter-all">
+                        <span class="dot all-dot"></span> All Updates
+                        <span class="count" id="count-all">0</span>
+                    </button>
+                    <button class="filter-btn" data-category="Feature" id="filter-feature">
+                        <span class="dot feature-dot"></span> Features
+                        <span class="count" id="count-feature">0</span>
+                    </button>
+                    <button class="filter-btn" data-category="Announcement" id="filter-announcement">
+                        <span class="dot announcement-dot"></span> Announcements
+                        <span class="count" id="count-announcement">0</span>
+                    </button>
+                    <button class="filter-btn" data-category="Security" id="filter-security">
+                        <span class="dot security-dot"></span> Security
+                        <span class="count" id="count-security">0</span>
+                    </button>
+                    <button class="filter-btn" data-category="Change" id="filter-change">
+                        <span class="dot change-dot"></span> Changes
+                        <span class="count" id="count-change">0</span>
+                    </button>
+                    <button class="filter-btn" data-category="Breaking" id="filter-breaking">
+                        <span class="dot breaking-dot"></span> Breaking
+                        <span class="count" id="count-breaking">0</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="sidebar-footer">
+                <p>Data source: Google Cloud</p>
+                <a href="https://docs.cloud.google.com/feeds/bigquery-release-notes.xml" target="_blank" rel="noopener noreferrer" class="source-link">
+                    XML Feed URL <i data-lucide="external-link" class="tiny-icon"></i>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Display Panel -->
+        <main class="main-content">
+            <header class="app-header">
+                <div class="header-meta">
+                    <div class="pulse-indicator"></div>
+                    <span id="sync-status">Connected</span>
+                </div>
+                <div class="header-actions">
+                    <span id="last-updated-text" class="timestamp-label">Updated: Loading...</span>
+                    <button id="refresh-btn" class="btn btn-primary" title="Sync live release notes">
+                        <i data-lucide="refresh-cw" id="refresh-icon" class="btn-icon"></i>
+                        <span>Sync Notes</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Scrollable Content Feed -->
+            <section class="feed-container" aria-label="Release notes list">
+                <!-- Skeleton Loader -->
+                <div id="skeleton-loader" class="skeleton-list">
+                    <div class="skeleton-card"></div>
+                    <div class="skeleton-card"></div>
+                    <div class="skeleton-card"></div>
+                </div>
+
+                <!-- actual notes container -->
+                <div id="notes-list" class="notes-grid" style="display: none;"></div>
+
+                <!-- Empty State -->
+                <div id="empty-state" class="empty-state-card" style="display: none;">
+                    <i data-lucide="inbox" class="empty-icon"></i>
+                    <h3>No release notes match your criteria</h3>
+                    <p>Try refining your search terms or selecting a different category filter.</p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Custom Tweet Composer Modal -->
+    <div id="tweet-modal" class="modal-overlay" style="display: none;" role="dialog" aria-labelledby="modal-title" aria-modal="true">
+        <div class="modal-card glass-modal">
+            <div class="modal-header">
+                <div class="title-wrapper">
+                    <i data-lucide="twitter" class="twitter-icon"></i>
+                    <h3 id="modal-title">Tweet Composer</h3>
+                </div>
+                <button id="close-modal-btn" class="close-btn" aria-label="Close modal">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            
+            <div class="modal-body">
+                <!-- Selected Note Preview Box -->
+                <div class="selected-note-preview">
+                    <div class="preview-badge-row">
+                        <span id="preview-badge" class="badge">Feature</span>
+                        <span id="preview-date" class="date-label">July 14, 2026</span>
+                    </div>
+                    <p id="preview-note-text" class="preview-text-content"></p>
+                </div>
+                
+                <!-- Tweet Input Area -->
+                <div class="tweet-composer-field">
+                    <label for="tweet-textarea">Compose your message:</label>
+                    <textarea id="tweet-textarea" rows="5" maxlength="280" placeholder="What's happening?"></textarea>
+                    
+                    <!-- Composer Helper Options -->
+                    <div class="composer-options">
+                        <label class="checkbox-option">
+                            <input type="checkbox" id="include-url-checkbox" checked>
+                            <span>Include source link</span>
+                        </label>
+                        <label class="checkbox-option">
+                            <input type="checkbox" id="include-tags-checkbox" checked>
+                            <span>Include #BigQuery #GCP</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Character Count Progress -->
+                <div class="char-count-row">
+                    <div class="progress-bar-container">
+                        <div id="char-progress" class="progress-bar-fill"></div>
+                    </div>
+                    <span id="char-count-label" class="char-count">0 / 280</span>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button id="cancel-tweet-btn" class="btn btn-secondary">Cancel</button>
+                <button id="send-tweet-btn" class="btn btn-accent">
+                    <i data-lucide="send" class="btn-icon"></i>
+                    <span>Tweet on X</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Clipboard & Refresh Toast Notifications -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Frontend logic scripts -->
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
