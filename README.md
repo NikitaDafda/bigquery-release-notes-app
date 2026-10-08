@@ -80,10 +80,4 @@ Open your browser and navigate to **`http://127.0.0.1:5000`**.
 
 ---
 
-## 📄 Academic Project Details
 
-* **Institution**: V.V.P. Engineering College, Rajkot (Gujarat Technological University)
-* **Subject**: Summer Internship / Mini Project (B.E. Semester-VII, Information Technology)
-* **Academic Year**: 2026-27
-* **Author**: Nikita Dafda (Enrollment No: 230470116080)
-* **Guidance**: Prof. Hemangi Joshi & Dr. Darshana H. Patel (HOD)
